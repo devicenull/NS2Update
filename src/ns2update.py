@@ -70,6 +70,7 @@ try:
 					
 				currentVersion = desiredVersion
 				serverProc = startServer(serverArgs)
+			lastCheck = time.time()
 		
 		serverProc.poll()
 		if serverProc.returncode != None:
