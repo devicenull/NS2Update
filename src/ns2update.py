@@ -1,6 +1,6 @@
 #!/bin/python
 
-import urllib2, subprocess, sys, os, time, logging, signal, win32api
+import urllib2, subprocess, sys, os, time, logging, signal
 from xml.etree.ElementTree import parse
 from logging import debug, info, warning, error, critical
 from threading import Thread
@@ -68,10 +68,10 @@ def cleanupServer(serverProc, outThread, logFile):
 	if logFile != None:
 		logFile.close()
 
-def exitHandler(signalType):
+def exitHandler(signalType, stack):
+	global serverProc
 	info("Got signal %s" % (signalType))
-	if signalType == signal.CTRL_C_EVENT or signalType == signal.CTRL_BREAK_EVENT:
-		serverProc.kill()
+	serverProc.kill()
 
 outQueue = Queue()
 serverArgs = " ".join(sys.argv[1:])
@@ -80,7 +80,7 @@ debug("Command line args: %s" % (serverArgs))
 currentVersion = lastCheck = checkDelay = 0
 serverProc = outThread = outQueue = logFile = None
 
-win32api.SetConsoleCtrlHandler(exitHandler,1)
+signal.signal(signal.SIGINT, exitHandler)
 try:
 	os.mkdir("serverlogs")
 except WindowsError:
@@ -129,5 +129,8 @@ try:
 
 		time.sleep(5)
 except KeyboardInterrupt:
+	stopServer(serverProc, outThread, logFile)
+	sys.exit(0)
+except IOError:
 	stopServer(serverProc, outThread, logFile)
 	sys.exit(0)
