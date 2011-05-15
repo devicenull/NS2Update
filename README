@@ -14,3 +14,6 @@ INSTALLATION:
 3) There is no further configuration necssary (nor is there any that can be done)
 
 Once the tool is running, it will automatically start your server up, then check for updates every 5 minutes.  It will check that the server is still running every 5 seconds, and restart it if it has crashed.
+
+CONFIGURATION:
+The tool will check the server directory and it's parent directory for hldsupdatetool.exe.  If you have it somewhere else, create a ns2update.cfg file in your server directory.  Put the full path (include hldsupdatetool.exe) to the update tool on the first line.

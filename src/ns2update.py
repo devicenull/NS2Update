@@ -31,7 +31,25 @@ def enqueue_output(out, queue, logFile):
 # if checkHash is set to 1, we will try to update until the hash of Server.exe changes
 def update(serverDir,checkHash):
 	info("Starting server update")
-	update = subprocess.Popen("../hldsupdatetool.exe -command update -game naturalselection2 -dir %s" % serverDir)
+	paths = [ "../hldsupdatetool.exe", "hldsupdatetool.exe" ]
+	if os.path.exists("%s/ns2update.cfg" % (serverDir)):
+		debug("Found ns2update.cfg file, loading hldsupdatetool path")
+		cfg = open("%s/ns2update.cfg" % (serverDir),"r")
+		paths.append(cfg.readline())
+		cfg.close()
+
+	updatePath = ""
+	for cur in paths:
+		if os.path.exists(cur):
+			updatePath = cur
+
+	if updatePath == "":
+		critical("Unable to find hldsupdatetool.exe, please copy to server directory or see README")
+		sys.exit(-1)
+
+	debug("Found hldsupdatetool at %s" % updatePath)
+
+	update = subprocess.Popen("%s -command update -game naturalselection2 -dir %s" % (updatePath,serverDir))
 	if update:
 		while update.returncode == None:
 			time.sleep(5)
