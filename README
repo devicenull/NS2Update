@@ -9,7 +9,7 @@ FEATURES:
 * Server logs archived
 
 INSTALLATION:
-1) Grab everything in the "dist" directory, and upload it to your server.
+1) Grab everything in the "dist" (or dist_x64, if you run a 64 bit OS) directory, and upload it to your server.
 2) In whatever script you use to start the server, replace 'Server.exe' with 'ns2update.exe'. (If you don't use a script, just start ns2update.exe instead of Server.exe)
 3) There is no further configuration necssary (nor is there any that can be done)
 
