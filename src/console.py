@@ -40,6 +40,11 @@ updater = NS2Update(logger=logging.getLogger(''),UpdateToolPath=None,serverDirec
 
 # Don't define the exit handler until after the updater object is available
 signal.signal(signal.SIGINT, exitHandler)
+signal.signal(signal.SIGABRT, exitHandler)
+signal.signal(signal.SIGFPE, exitHandler)
+signal.signal(signal.SIGILL, exitHandler)
+signal.signal(signal.SIGSEGV, exitHandler)
+signal.signal(signal.SIGTERM, exitHandler)
 
 try:
 	while 1==1:
