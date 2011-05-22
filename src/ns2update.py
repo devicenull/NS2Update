@@ -1,8 +1,8 @@
-import urllib2, subprocess, sys, os, time
+import urllib2, subprocess, sys, os, time, argparse
 from threading import Thread
 from Queue import Queue, Empty
 from time import strftime
-
+from SRCDS import SRCDS
 
 def enqueue_output(out, queue, logFile):
 	for line in iter(out.readline,''):
@@ -31,12 +31,47 @@ class NS2Update:
 	currentVersion = 0
 	# What arguments should we pass to the server on startup
 	serverArgs = ''
+	# Is the server empty or not?
+	serverEmpty = True
+	# Store the time we last started the server
+	lastStart = 0
 
 	def __init__(self, logger, UpdateToolPath, serverDirectory, serverArgs):
 		self.logger = logger
 		self.findUpdateTool(UpdateToolPath)
 		self.serverDir = serverDirectory
 		self.serverArgs = serverArgs
+
+		self.serverIP = '127.0.0.1'
+		self.serverPort = '27015'
+		self.restartWhenEmpty = False
+
+		# Let's see if we can figure out what IP/port the server is running
+		argParser = argparse.ArgumentParser(prog='NS2')
+		argParser.add_argument('-ip',default='127.0.0.1')
+		argParser.add_argument('-port',default='27015')
+		argParser.add_argument('--restartwhenempty',action='store_true')
+		try:
+			parsed = argParser.parse_args(serverArgs.split(' '))
+			self.serverIP = parsed.ip
+			self.serverPort = parsed.port
+			self.restartWhenEmpty = parsed.restartwhenempty
+		except:
+			pass
+			
+		# NS2 doesn't like extra command line args (and will die if they are present)
+		self.serverArgs = self.serverArgs.replace('--restartwhenempty','')
+			
+		# Query is one port higher then join
+		self.serverPort = int(self.serverPort)+1
+
+		self.logger.info("Detected server IP as %s:%i" % (self.serverIP,self.serverPort))
+		self.queryObject = SRCDS(self.serverIP,self.serverPort)
+
+		if self.restartWhenEmpty:
+			self.logger.info("Server will be automatically restarted when empty")
+		else:
+			self.logger.info("Server will *NOT* be automatically restarted when empty")
 
 	def findUpdateTool(self,extraPath):
 		paths = [ "../hldsupdatetool.exe", "hldsupdatetool.exe" ]
@@ -65,6 +100,10 @@ class NS2Update:
 		self.logger.info("Server update complete!")
 
 	def startServer(self):
+		# If we are starting the server, it must be empty
+		self.serverEmpty = True
+		self.lastStart = time.time()
+
 		# Actually start the server process
 		self.serverProc = subprocess.Popen("Server.exe %s" % self.serverArgs, stdin=None, stdout=subprocess.PIPE)
 		self.logger.info("Server started, pid %i" % (self.serverProc.pid))
@@ -127,6 +166,28 @@ class NS2Update:
 			self.logger.critical("Server has died, restarting!")
 			self.cleanupServer()
 			self.startServer()
+
+		# Don't check the server for 10s after it started (avoids issues with query not responding during startup)
+		if self.restartWhenEmpty and time.time()-self.lastStart > 10:
+			# If we are going to attempt to restart the server when it's empty, we need to query it..
+			try:
+				details = self.queryObject.details()
+				
+				oldEmpty = self.serverEmpty
+				
+				if details['current_playercount'] == 0:
+					self.serverEmpty = True
+				else:
+					self.serverEmpty = False
+				
+				# Server had at least one player, now it's empty.  Restart it
+				if not oldEmpty and self.serverEmpty:
+					self.logger.info("Server now empty, restarting")
+					self.stopServer()
+					time.sleep(1)
+					self.startServer()
+			except IOError:
+				pass
 
 		# Use this to read console output without blocking
 		#try:
