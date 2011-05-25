@@ -52,7 +52,7 @@ class NS2Update:
 		argParser.add_argument('-port',default='27015')
 		argParser.add_argument('--restartwhenempty',action='store_true')
 		try:
-			parsed = argParser.parse_args(serverArgs.split(' '))
+			parsed,otherargs = argParser.parse_known_args(serverArgs.split(' '))
 			self.serverIP = parsed.ip
 			self.serverPort = parsed.port
 			self.restartWhenEmpty = parsed.restartwhenempty

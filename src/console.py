@@ -35,8 +35,9 @@ if os.path.exists("%s/ns2update.cfg" % (serverDir)):
 	cfg = open("%s/ns2update.cfg" % (serverDir),"r")
 	updatePath = cfg.readline()
 	cfg.close()
+	debug("Added path from config file: %s" % updatePath)
 
-updater = NS2Update(logger=logging.getLogger(''),UpdateToolPath=None,serverDirectory = serverDir,serverArgs=serverArgs)
+updater = NS2Update(logger=logging.getLogger(''),UpdateToolPath=updatePath,serverDirectory = serverDir,serverArgs=serverArgs)
 
 # Don't define the exit handler until after the updater object is available
 signal.signal(signal.SIGINT, exitHandler)
