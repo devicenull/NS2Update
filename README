@@ -7,6 +7,7 @@ FEATURES:
 * Automatic updates
 * Automatic restart on crash
 * Server logs archived
+* Performance graphs (cpu, memory, tickrate, players)
 
 INSTALLATION:
 1) Grab everything in the "dist" (or dist_x64, if you run a 64 bit OS) directory, and upload it to your server.
@@ -14,6 +15,8 @@ INSTALLATION:
 3) There is no further configuration necssary (nor is there any that can be done)
 
 Once the tool is running, it will automatically start your server up, then check for updates every 5 minutes.  It will check that the server is still running every 5 seconds, and restart it if it has crashed.
+
+Every 5 minutes the cpu/memory/tickrate/players will be recorded and a graph generated.  This graph will be saved to ns2server.png in the same directory as Server.exe.  NOTE: tickrate will only be recorded if you are running NS2GmOvermind.  The stock server does not have any way to retrieve this information.
 
 CONFIGURATION:
 The tool will check the server directory and it's parent directory for hldsupdatetool.exe.  If you have it somewhere else, create a ns2update.cfg file in your server directory.  Put the full path (include hldsupdatetool.exe) to the update tool on the first line.
