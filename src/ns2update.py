@@ -196,37 +196,37 @@ class NS2Update:
 			self.startServer()
 
 		currentPlayers = 0
+		tickrate = 0
 		# Don't check the server for 10s after it started (avoids issues with query not responding during startup)
-		if self.restartWhenEmpty and time.time()-self.lastStart > 10:
+		if time.time()-self.lastStart > 10:
 			# If we are going to attempt to restart the server when it's empty, we need to query it..
 			try:
 				details = self.queryObject.details()
 				currentPlayers = details['current_playercount']
 
-				oldEmpty = self.serverEmpty
+				if self.restartWhenEmpty:
+					oldEmpty = self.serverEmpty
 
-				if details['current_playercount'] == 0:
-					self.serverEmpty = True
-				else:
-					self.serverEmpty = False
+					if details['current_playercount'] == 0:
+						self.serverEmpty = True
+					else:
+						self.serverEmpty = False
 
-				# Server had at least one player, now it's empty.  Restart it
-				if not oldEmpty and self.serverEmpty:
-					self.logger.info("Server now empty, restarting")
-					self.stopServer()
-					time.sleep(1)
-					self.startServer()
+					# Server had at least one player, now it's empty.  Restart it
+					if not oldEmpty and self.serverEmpty:
+						self.logger.info("Server now empty, restarting")
+						self.stopServer()
+						time.sleep(1)
+						self.startServer()
 			except IOError:
 				pass
-
-		tickrate = 0
-		try:
-			if self.getTickrate:
-				rules = self.overmindQueryObject.rules()
-				tickrate = rules['netstat_tickrate']
-		except IOError, e:
-			self.logger.debug("Got IOError!")
-			self.logger.debug(e)
+				
+			try:
+				if self.getTickrate:
+					rules = self.overmindQueryObject.rules()
+					tickrate = rules['netstat_tickrate']
+			except IOError:
+				pass
 
 		self.recordStats(currentPlayers,tickrate)
 
