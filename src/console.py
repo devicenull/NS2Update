@@ -37,6 +37,9 @@ if os.path.exists("%s/ns2update.cfg" % (serverDir)):
 	cfg.close()
 	debug("Added path from config file: %s" % updatePath)
 
+if not os.path.exists("%s/rrdtool.exe" % serverDir):
+	warning("rrdtool.exe not found in %s.  Resource graphs will not be generated" % serverDir)
+
 updater = NS2Update(logger=logging.getLogger(''),UpdateToolPath=updatePath,serverDirectory = serverDir,serverArgs=serverArgs)
 
 # Don't define the exit handler until after the updater object is available
@@ -50,7 +53,7 @@ signal.signal(signal.SIGTERM, exitHandler)
 try:
 	while 1==1:
 		updater.think()
-		time.sleep(5)
+		time.sleep(60)
 except KeyboardInterrupt:
 	updater.stopServer()
 	sys.exit(0)

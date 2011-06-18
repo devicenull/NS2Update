@@ -1,4 +1,4 @@
-import urllib2, subprocess, sys, os, time, argparse
+import urllib2, subprocess, sys, os, time, argparse, psutil
 from threading import Thread
 from Queue import Queue, Empty
 from time import strftime
@@ -58,10 +58,10 @@ class NS2Update:
 			self.restartWhenEmpty = parsed.restartwhenempty
 		except:
 			pass
-			
+
 		# NS2 doesn't like extra command line args (and will die if they are present)
 		self.serverArgs = self.serverArgs.replace('--restartwhenempty','')
-			
+
 		# Query is one port higher then join
 		self.serverPort = int(self.serverPort)+1
 
@@ -73,6 +73,15 @@ class NS2Update:
 		else:
 			self.logger.info("Server will *NOT* be automatically restarted when empty")
 
+		if self.serverArgs.lower().find("ns2gmovrmind") != -1:
+			self.getTickrate = True
+			self.logger.info("NSGmOvermind detected, tickrate stats are available")
+			self.logger.debug("NS2GmOvermind query: %s:%i" % (self.serverIP,self.serverPort+1))
+			self.overmindQueryObject = SRCDS(self.serverIP,self.serverPort+1)
+		else:
+			self.getTickrate = False
+			self.logger.info("NS2GmOvermind *NOT* detected, tickrate stats unavailable")
+	
 	def findUpdateTool(self,extraPath):
 		paths = [ "../hldsupdatetool.exe", "hldsupdatetool.exe" ]
 
@@ -87,7 +96,7 @@ class NS2Update:
 		if self.updatePath == "":
 			self.logger.critical("Unable to find hldsupdatetool.exe, please copy to server directory or see README")
 			raise NameError("Unable to find hldsupdatetool.exe")
-
+	
 	def doUpdate(self):
 		self.logger.info("Starting server update")
 
@@ -98,7 +107,7 @@ class NS2Update:
 				update.poll()
 
 		self.logger.info("Server update complete!")
-
+	
 	def startServer(self):
 		# If we are starting the server, it must be empty
 		self.serverEmpty = True
@@ -118,13 +127,13 @@ class NS2Update:
 		self.outputThread = Thread(target=enqueue_output, args=(self.serverProc.stdout, self.outputQueue, self.serverLogFile))
 		self.outputThread.daemon = True
 		self.outputThread.start()
-
+	
 	def stopServer(self):
 		if self.serverProc != None:
 			self.logger.info("Killing server")
 			self.serverProc.kill()
 			self.cleanupServer()
-
+	
 	def cleanupServer(self):
 		if self.outputThread != None:
 			self.outputThread.join()
@@ -133,7 +142,26 @@ class NS2Update:
 		self.outputThread = None
 		self.serverLogFile = None
 		self.serverProc = None
+	
+	# Tickrate is currently unsupported, but adding it here is easier then modfiying rrd's later
+	def recordStats(self,players,tickrate):
+		statsFile = "%s/ns2update.rrd" % (self.serverDir)
+		if not os.path.exists(statsFile):
+			os.system("%s/rrdtool.exe create %s DS:memory:GAUGE:300:0:U DS:cpu:GAUGE:600:0:U DS:players:GAUGE:600:0:U DS:tickrate:GAUGE:600:0:U RRA:LAST:0.5:1:2016 RRA:AVERAGE:0.5:2:2016" % (self.serverDir,statsFile))
 
+		p = psutil.Process(self.serverProc.pid)
+		cpu = p.get_cpu_percent(interval=1.0)
+		meminfo = p.get_memory_info()
+		rss = meminfo[0] / 1024 / 1024
+
+		self.logger.debug("CPU usage: %i, memory: %i MB, players: %i tickrate: %s" % (cpu, rss, players, tickrate))
+
+		os.system("%s/rrdtool.exe update %s N:%i:%f:%i:%s" % (self.serverDir, statsFile, rss, cpu, players, tickrate))
+
+		# Escape colons so rrdtool doesn't die
+		statsFile = statsFile.replace(":","\\:")
+		subprocess.Popen("%s/rrdtool.exe graph %s/ns2server.png --height 200 --width 400 --font DEFAULT:0:%s/rrdfont.ttf  DEF:memory=%s:memory:LAST CDEF:memorydisp=memory,10,/ DEF:cpu=%s:cpu:LAST DEF:players=%s:players:LAST DEF:tickrate=%s:tickrate:LAST AREA:cpu#00FF00:\"%% CPU Usage\"  LINE:memorydisp#FF0000:\"Memory usage (MB/10)\" LINE1:players#0000FF:\"Players\" LINE1:tickrate#000000:\"Tickrate\"" % (self.serverDir, self.serverDir, self.serverDir, statsFile, statsFile, statsFile, statsFile),stdout=subprocess.PIPE).wait()
+	
 	def think(self):
 		if time.time() - self.lastCheck > self.checkDelay:
 			self.logger.debug("Checking for server update...")
@@ -167,19 +195,21 @@ class NS2Update:
 			self.cleanupServer()
 			self.startServer()
 
+		currentPlayers = 0
 		# Don't check the server for 10s after it started (avoids issues with query not responding during startup)
 		if self.restartWhenEmpty and time.time()-self.lastStart > 10:
 			# If we are going to attempt to restart the server when it's empty, we need to query it..
 			try:
 				details = self.queryObject.details()
-				
+				currentPlayers = details['current_playercount']
+
 				oldEmpty = self.serverEmpty
-				
+
 				if details['current_playercount'] == 0:
 					self.serverEmpty = True
 				else:
 					self.serverEmpty = False
-				
+
 				# Server had at least one player, now it's empty.  Restart it
 				if not oldEmpty and self.serverEmpty:
 					self.logger.info("Server now empty, restarting")
@@ -188,6 +218,17 @@ class NS2Update:
 					self.startServer()
 			except IOError:
 				pass
+
+		tickrate = 0
+		try:
+			if self.getTickrate:
+				rules = self.overmindQueryObject.rules()
+				tickrate = rules['netstat_tickrate']
+		except IOError, e:
+			self.logger.debug("Got IOError!")
+			self.logger.debug(e)
+
+		self.recordStats(currentPlayers,tickrate)
 
 		# Use this to read console output without blocking
 		#try:

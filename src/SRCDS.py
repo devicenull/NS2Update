@@ -505,8 +505,11 @@ This assembles mult-packet responses and returns the raw response (sans the four
         ruleslist = string.split(str(data), '\x00')
         ruleslist.pop()
         rulesdict =  {}
-        for everyother in ruleslist[::2]:
-            rulesdict[everyother] = ruleslist[ruleslist.index(everyother) + 1]
+        try:
+			for everyother in ruleslist[::2]:
+				rulesdict[everyother] = ruleslist[ruleslist.index(everyother) + 1]
+        except IndexError:
+            pass
         return rulesdict
 
     def disconnect(self):
