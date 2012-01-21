@@ -1,9 +1,8 @@
-rm -rf dist/ dist_x64/
+export PATH=$PATH:/c/Python27/
 
-/d/Python27/python.exe src/setup.py py2exe
-cp rrdtool.exe rrdfont.ttf dist/
+rm -f dist/console.exe dist/ns2update.exe
 
-mv dist dist_x64
+python pyinstaller-1.5.1/Makespec.py src/console.py --onefile
+python pyinstaller-1.5.1/Build.py console.spec
 
-/d/Python27_x86/python.exe src/setup.py py2exe
-cp rrdtool.exe rrdfont.ttf dist/
+mv dist/console.exe dist/ns2update.exe
