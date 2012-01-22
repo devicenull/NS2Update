@@ -10,7 +10,7 @@ FEATURES:
 * Performance graphs (cpu, memory, tickrate, players)
 
 INSTALLATION:
-1) Grab dist/ns2update.exe and dist/rrdtool.exe, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  Note: I am no longer producing 32bit builds.  If you need them, please contact me on the NS2 forums and I can start again.
+1) Grab dist/ns2update.exe, dist/rrdtool.exe, and dist/rrdfont.ttf, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  Note: I am no longer producing 32bit builds.  If you need them, please contact me on the NS2 forums and I can start again.
 2) In whatever script you use to start the server, replace 'Server.exe' with 'ns2update.exe'. (If you don't use a script, just start ns2update.exe instead of Server.exe)
 3) (not required) Apply this registry tweak so memory read errors don't hang the server: http://www.zhacks.com/2010/04/10/disable-application-error-memory-could-not-be-read-popup/ .  If you choose not to apply this, it's possible for your server to crash and not be automatically updated.
 
