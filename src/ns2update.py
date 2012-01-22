@@ -32,7 +32,7 @@ class NS2Update:
 	# What arguments should we pass to the server on startup
 	serverArgs = ''
 	# Is the server empty or not?
-	serverEmpty = True
+	serverEmptyCount = 0
 	# Store the time we last started the server
 	lastStart = 0
 
@@ -110,7 +110,7 @@ class NS2Update:
 	
 	def startServer(self):
 		# If we are starting the server, it must be empty
-		self.serverEmpty = True
+		self.serverEmptyCount = 0
 		self.lastStart = time.time()
 
 		# Actually start the server process
@@ -205,15 +205,13 @@ class NS2Update:
 				currentPlayers = details['current_playercount']
 
 				if self.restartWhenEmpty:
-					oldEmpty = self.serverEmpty
 
 					if details['current_playercount'] == 0:
-						self.serverEmpty = True
+						self.serverEmptyCount += 1
 					else:
-						self.serverEmpty = False
+						self.serverEmptyCount = 0
 
-					# Server had at least one player, now it's empty.  Restart it
-					if not oldEmpty and self.serverEmpty:
+					if self.serverEmptyCount > 5:
 						self.logger.info("Server now empty, restarting")
 						self.stopServer()
 						time.sleep(1)
