@@ -40,7 +40,6 @@ class NS2Update:
 
 	def __init__(self, logger, UpdateToolPath, serverDirectory, serverArgs):
 		self.logger = logger
-		self.findUpdateTool(UpdateToolPath)
 		self.serverDir = serverDirectory
 		self.serverArgs = serverArgs
 
@@ -64,8 +63,11 @@ class NS2Update:
 		except:
 			pass
 
+		# have to do this after we parse the command line
+		self.findUpdateTool(UpdateToolPath)
+
 		# NS2 doesn't like extra command line args (and will die if they are present)
-		self.serverArgs = self.serverArgs.replace('--restartwhenempty','')
+		self.serverArgs = self.serverArgs.replace('--restartwhenempty','').replace('--noupdatecheck','')
 
 		# Query is one port higher then join
 		self.serverPort = int(self.serverPort)+1
