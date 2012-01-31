@@ -86,6 +86,10 @@ class NS2Update:
 			self.logger.info("NS2GmOvermind *NOT* detected, tickrate stats unavailable")
 	
 	def findUpdateTool(self,extraPath):
+		if self.noUpdateCheck:
+			self.logger.info("Update checking disabled, not looking for hldsupdatetool")
+			return
+			
 		paths = [ "../hldsupdatetool.exe", "hldsupdatetool.exe" ]
 
 		if extraPath != None and extraPath != '':
