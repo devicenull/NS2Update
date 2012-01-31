@@ -45,17 +45,20 @@ class NS2Update:
 		self.serverIP = '127.0.0.1'
 		self.serverPort = '27015'
 		self.restartWhenEmpty = False
+		self.noUpdateCheck = False
 
 		# Let's see if we can figure out what IP/port the server is running
 		argParser = argparse.ArgumentParser(prog='NS2')
 		argParser.add_argument('-ip',default='127.0.0.1')
 		argParser.add_argument('-port',default='27015')
 		argParser.add_argument('--restartwhenempty',action='store_true')
+		argParser.add_argument('--noupdatecheck',action='store_true')
 		try:
 			parsed,otherargs = argParser.parse_known_args(serverArgs.split(' '))
 			self.serverIP = parsed.ip
 			self.serverPort = parsed.port
 			self.restartWhenEmpty = parsed.restartwhenempty
+			self.noUpdateCheck = parsed.noupdatecheck
 		except:
 			pass
 
@@ -163,7 +166,7 @@ class NS2Update:
 		subprocess.Popen("%s/rrdtool.exe graph %s/ns2server.png --height 200 --width 400 --font DEFAULT:0:%s/rrdfont.ttf  DEF:memory=%s:memory:LAST CDEF:memorydisp=memory,10,/ DEF:cpu=%s:cpu:LAST DEF:players=%s:players:LAST DEF:tickrate=%s:tickrate:LAST AREA:cpu#00FF00:\"%% CPU Usage\"  LINE:memorydisp#FF0000:\"Memory usage (MB/10)\" LINE1:players#0000FF:\"Players\" LINE1:tickrate#000000:\"Tickrate\"" % (self.serverDir, self.serverDir, self.serverDir, statsFile, statsFile, statsFile, statsFile),stdout=subprocess.PIPE).wait()
 	
 	def think(self):
-		if time.time() - self.lastCheck > self.checkDelay:
+		if not self.noUpdateCheck and time.time() - self.lastCheck > self.checkDelay:
 			self.logger.debug("Checking for server update...")
 			data = urllib2.urlopen(self.versionURL)
 
