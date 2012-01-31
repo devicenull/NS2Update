@@ -200,6 +200,9 @@ class NS2Update:
 				self.startServer()
 			self.lastCheck = time.time()
 
+		if self.serverProc == None:
+			self.startServer()
+
 		self.serverProc.poll()
 		if self.serverProc.returncode != None:
 			self.logger.critical("Server has died, restarting!")
