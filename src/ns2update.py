@@ -35,6 +35,8 @@ class NS2Update:
 	serverEmptyCount = 0
 	# Store the time we last started the server
 	lastStart = 0
+	# Should we disable update checking?
+	noUpdateCheck = False
 
 	def __init__(self, logger, UpdateToolPath, serverDirectory, serverArgs):
 		self.logger = logger
@@ -89,7 +91,7 @@ class NS2Update:
 		if self.noUpdateCheck:
 			self.logger.info("Update checking disabled, not looking for hldsupdatetool")
 			return
-			
+
 		paths = [ "../hldsupdatetool.exe", "hldsupdatetool.exe" ]
 
 		if extraPath != None and extraPath != '':
