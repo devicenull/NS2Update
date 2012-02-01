@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>NS2Update</title>
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<script src="/js/bootstrap.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			var logpos = 0;
+			function updateLog()
+			{
+				$.get('/serverlog/',{'logpos': logpos},function(data) {
+					$('#serverlog').html($('#serverlog').html()+data.entries);
+					$('#serverlog').attr({'scrollTop':$('#serverlog').prop('scrollHeight')});
+					logpos = data.pos;
+				})
+				setTimeout("updateLog()",1000);
+				refreshInfo();
+			}
+			setTimeout("updateLog()",1000);
+
+			function refreshInfo()
+			{
+				$.get('/info/',function(data){
+					$('#servername').html(data.server_name);
+					$('#serverplayers').html(data.current_players+'/'+data.max_players);
+					$('#servermap').html(data.map);
+					$('#serverinfo').show();
+				})
+			}
+
+			function sendCommand()
+			{
+				$.post('/rcon/',{'command': $('#rconinput').val()})
+				$('#rconinput').val('');
+			}
+		</script>
+
+		<link href="/css/bootstrap.css" rel="stylesheet">
+		<style>
+			body {
+				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+			}
+
+			#serverlog
+			{
+				height: 75%;
+				width: 100%;
+				overflow: auto;
+				white-space: pre;
+			}
+
+			#rconinput
+			{
+				margin-top: 3px;
+				width: 90%;
+			}
+
+			#serverinfo
+			{
+				margin-left: 10px;
+				display: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">	
+					<span class="brand">NS2Update</span>
+					<!--<div class="nav-collapse">
+					<ul class="nav">
+					  <li class="active"><a href="#">Home</a></li>
+
+					  <li><a href="#about">About</a></li>
+					  <li><a href="#contact">Contact</a></li>
+					</ul>
+				 	</div><!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				<div class="span2">
+					<div class="well sidebar-nav">
+						<ul class="nav nav-list">
+							<li class="nav-header">Actions</li>
+							<li class="active"><a href="#">Server Console</a></li>
+							<li><a href="#">Active Players</a></li>
+							<li><a href="#">Chat</a></li>
+						</ul>
+					</div><!--/.well -->
+				</div><!--/span-->
+
+				<div class="span10">
+					<div id="serverinfo">
+						<h3 id="servername"></h3>
+						<h4>
+							<span id="serverplayers"></span> on <span id="servermap"></span>
+						</h4>
+					</div>
+					<div class="well" id="serverlog"></div>
+					<div style="vertical-align: middle;">
+					<input type="text" name="command" id="rconinput">
+					<button class="btn" type="button" style="margin-top: -7px;" onclick="sendCommand()">Submit</button>
+					</div>
+				</div>
+			</div>
+		</div> <!-- /container -->
+	</body>
+</html>

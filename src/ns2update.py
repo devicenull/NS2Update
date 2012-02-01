@@ -125,7 +125,7 @@ class NS2Update:
 		self.lastStart = time.time()
 
 		# Actually start the server process
-		self.serverProc = subprocess.Popen("Server.exe %s" % self.serverArgs, stdin=None, stdout=subprocess.PIPE)
+		self.serverProc = subprocess.Popen("Server.exe %s" % self.serverArgs, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 		self.logger.info("Server started, pid %i" % (self.serverProc.pid))
 
 		# Open up the log file
@@ -156,6 +156,9 @@ class NS2Update:
 	
 	# Tickrate is currently unsupported, but adding it here is easier then modfiying rrd's later
 	def recordStats(self,players,tickrate):
+		if not os.path.exists("%s/rrdtool.exe" % self.serverDir):
+			return
+
 		statsFile = "%s/ns2update.rrd" % (self.serverDir)
 		if not os.path.exists(statsFile):
 			os.system("%s/rrdtool.exe create %s DS:memory:GAUGE:300:0:U DS:cpu:GAUGE:600:0:U DS:players:GAUGE:600:0:U DS:tickrate:GAUGE:600:0:U RRA:LAST:0.5:1:2016 RRA:AVERAGE:0.5:2:2016" % (self.serverDir,statsFile))
@@ -248,3 +251,7 @@ class NS2Update:
 		#		line = outQueue.get_nowait()
 		#except Empty:
 		#	pass
+
+	def sendCommand(self,command):
+		print "Sending command: %s" % command
+		self.serverProc.stdin.write("%s\r\n" % command)

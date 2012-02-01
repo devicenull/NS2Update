@@ -22,3 +22,8 @@ CONFIGURATION:
 The tool will check the server directory and it's parent directory for hldsupdatetool.exe.  If you have it somewhere else, create a ns2update.cfg file in your server directory.  Put the full path (include hldsupdatetool.exe) to the update tool on the first line.
 
 This tool can optionally restart your server when it goes from full -> empty (Useful due to the resource leaks in NS2).  To enable this, add "--restartwhenempty" to your command line.  Note that if you are running the server on something other then the default IP/port, you must set the IP and port using the "-ip X.X.X.X -port 27016" command line arguments in order to make use of this feature.
+
+THANKS TO:
+* CherryPy
+* Twitter's Bootstrap
+* SRCDS.PY

@@ -2,6 +2,7 @@
 import logging, sys, time, signal, os
 from logging import debug, info, warning, error, critical
 from ns2update import NS2Update
+from webserver import WebServer
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -41,6 +42,7 @@ if not os.path.exists("%s/rrdtool.exe" % serverDir):
 	warning("rrdtool.exe not found in %s.  Resource graphs will not be generated" % serverDir)
 
 updater = NS2Update(logger=logging.getLogger(''),UpdateToolPath=updatePath,serverDirectory = serverDir,serverArgs=serverArgs)
+ws = WebServer(updater=updater)
 
 # Don't define the exit handler until after the updater object is available
 signal.signal(signal.SIGINT, exitHandler)
