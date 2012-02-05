@@ -1,18 +1,27 @@
 # originally from http://tools.cherrypy.org/wiki/AuthenticationAndAccessRestrictions
-import cherrypy
+import cherrypy, os
 
 from logging import handlers, debug, info, warning, error, critical
+from ns2authmanager import NS2AuthManager
 
 SESSION_KEY = '_cp_username'
+
+authmananger = None
+authdomain = ''
 
 def check_credentials(username, password):
 	"""Verifies credentials for username and password.
 	Returns None on success or a string describing the error on failure"""
-	# Adapt to your needs
-	if username in ('test') and password == 'secret':
+	global authmanager, authdomain
+	if authmanager.hasUser(username,authdomain,password):
 		return None
 	else:
-		return u"Incorrect username or password."
+		return u"Incorrect username or password"
+	# Adapt to your needs
+	#if username in ('test') and password == 'secret':
+	#	return None
+	#else:
+	#	return u"Incorrect username or password."
 
 	# An example implementation which uses an ORM could be:
 	# u = User.get(username)
@@ -43,7 +52,6 @@ def require(*conditions):
 	"""A decorator that appends conditions to the auth.require config
 	variable."""
 	def decorate(f):
-		debug("In require decorator")
 		if not hasattr(f, '_cp_config'):
 			f._cp_config = dict()
 		if 'auth.require' not in f._cp_config:
@@ -96,8 +104,11 @@ def all_of(*conditions):
 
 class AuthController(object):
 	def __init__(self, webserver):
+		global authmanager
+		global authdomain
 		self.webserver = webserver
-
+		authmanager = NS2AuthManager(os.path.join(self.webserver.updater.serverConfig['webadminDirectory'],'.htpasswd'))
+		authdomain = self.webserver.updater.serverConfig['webadminDomain']
 	def on_login(self, username):
 		"""Called on successful login"""
 
@@ -108,15 +119,6 @@ class AuthController(object):
 		tmpl = self.webserver.template_env.get_template('layout.html')
 		return tmpl.render(page='login.html',username=None,teplate_username=username,from_page=from_page,msg=msg)
 
-		return """<html><body>
-			<form method="post" action="/auth/login">
-			<input type="hidden" name="from_page" value="%(from_page)s" />
-			%(msg)s<br />
-			Username: <input type="text" name="username" value="%(username)s" /><br />
-			Password: <input type="password" name="password" /><br />
-			<input type="submit" value="Log in" />
-		</body></html>""" % locals()
-
 	@cherrypy.expose
 	def login(self, username=None, password=None, from_page="/"):
 		if username is None or password is None:
@@ -126,6 +128,7 @@ class AuthController(object):
 		if error_msg:
 			return self.get_loginform(username, error_msg, from_page)
 		else:
+			cherrypy.session.regenerate()
 			cherrypy.session[SESSION_KEY] = cherrypy.request.login = username
 			self.on_login(username)
 			raise cherrypy.HTTPRedirect(from_page or "/")

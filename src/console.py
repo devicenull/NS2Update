@@ -2,7 +2,6 @@
 import logging, sys, time, signal, os
 from logging import debug, info, warning, error, critical
 from ns2update import NS2Update
-from webserver.webserver import WebServer
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -15,6 +14,7 @@ console.setFormatter(logging.Formatter('[NS2Update] %(levelname)-8s %(message)s'
 logging.getLogger('').addHandler(console)
 logger = logging.getLogger('')
 
+from webserver.webserver import WebServer
 
 serverArgs = " ".join(sys.argv[1:])
 serverDir = os.getcwd()

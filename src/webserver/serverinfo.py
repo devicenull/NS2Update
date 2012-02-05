@@ -1,4 +1,5 @@
 import json, cherrypy
+from authcontroller import require
 
 class ServerInfo:
 	def __init__(self, webserver, updater):

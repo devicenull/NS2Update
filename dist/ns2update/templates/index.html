@@ -5,15 +5,22 @@
 	*/
 	function refreshInfo()
 	{
-		$.get('/info/general/',function(data){
-			$('#servername').html(data.server_name);
-			$('#serverplayers').html(data.current_players+'/'+data.max_players);
-			$('#servermap').html(data.map);
-			$('#serverinfo').show();
+		$.ajax({
+			url: '/info/general/',
+			success: function(data){
+				$('#servername').html(data.server_name);
+				$('#serverplayers').html(data.current_players+'/'+data.max_players);
+				$('#servermap').html(data.map);
+				$('#serverinfo').show();
 
-			updatePlayers();
+				updatePlayers();
 
-			setTimeout("refreshInfo()",10000);
+				setTimeout("refreshInfo()",10000);
+				},
+			error: function(data){
+				$('#serverinfo').hide();
+				setTimeout("refreshInfo()",5000);
+			}
 		})
 	}
 	refreshInfo();
@@ -144,8 +151,8 @@
 </div><!--/span-->
 
 <div class="span10">
-	<div  id="serverinfo" class="row">
-		<div class="span8">
+	<div class="row">
+		<div class="span8" id="serverinfo" style="display: none;">
 			<h3 id="servername"></h3>
 			<h4>
 				<span id="serverplayers"></span> on <span id="servermap"></span>
@@ -195,12 +202,13 @@
 	<div id="chat">
 		<div class="well" id="chatlog"></div>
 		<div style="vertical-align: middle;">
-		{% if rcon_available == "true" %}
+			Chat commands not available in the current NS2 build.
+		<!--{% if rcon_available == "true" %}
 			<input type="text" name="command" id="rconinput">
 			<button class="btn-primary" type="button" style="margin-top: -7px;" onclick="sendCommand()">Submit</button>
 		{% else %}
 			Rcon not availabe, please modify webadminActive in your configuration file.
-		{% endif -%}
+		{% endif -%}-->
 		</div>
 	</div>
 	{% endif %}

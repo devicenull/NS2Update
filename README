@@ -8,9 +8,10 @@ FEATURES:
 * Automatic restart on crash
 * Server logs archived
 * Performance graphs (cpu, memory, tickrate, players)
+* Server remote control (view server log, players, chat remotely.  Send rcon commands and see the server's response)
 
 INSTALLATION:
-1) Grab dist/ns2update.exe, dist/rrdtool.exe, and dist/rrdfont.ttf, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  Note: I am no longer producing 32bit builds.  If you need them, please contact me on the NS2 forums and I can start again.
+1) Grab all the files from your dist/ directory, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  Note: I am no longer producing 32bit builds.  If you need them, please contact me on the NS2 forums and I can start again.
 2) In whatever script you use to start the server, replace 'Server.exe' with 'ns2update.exe'. (If you don't use a script, just start ns2update.exe instead of Server.exe)
 3) (not required) Apply this registry tweak so memory read errors don't hang the server: http://www.zhacks.com/2010/04/10/disable-application-error-memory-could-not-be-read-popup/ .  If you choose not to apply this, it's possible for your server to crash and not be automatically updated.
 
@@ -23,7 +24,6 @@ The tool will check the server directory and it's parent directory for hldsupdat
 
 This tool can optionally restart your server when it goes from full -> empty (Useful due to the resource leaks in NS2).  To enable this, add "--restartwhenempty" to your command line.  Note that if you are running the server on something other then the default IP/port, you must set the IP and port using the "-ip X.X.X.X -port 27016" command line arguments in order to make use of this feature.
 
-THANKS TO:
-* CherryPy
-* Twitter's Bootstrap
-* SourceLib
+If you wish to make use of the web interface, you need to enable web administration (see NS2's 'Dedicated Server Usage.txt' for info).  NS2Update will create itself a user when it starts up (a new password will be chosen on each restart).  Once you have enabled this, you need to add another user (for yourself!).  Once you have added the user, you can log into the ns2update webui with your rcon username/password.  Guest users will only be able to see the active player list.
+
+The web interface will bind to your 'webadminDomain' IP, with the port being one higher then 'webadminPort'.

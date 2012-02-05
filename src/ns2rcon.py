@@ -1,7 +1,8 @@
-import string, os, hashlib, urllib2, urllib
+import string, os, urllib2, urllib
 from random import choice
 from logging import debug, info, warning, error, critical
 from bs4 import BeautifulSoup
+from ns2authmanager import NS2AuthManager
 
 
 class NS2Rcon:
@@ -10,22 +11,9 @@ class NS2Rcon:
 		self.serverDirectory = serverDirectory
 		self.mypassword = ''.join([choice(string.letters + string.digits) for i in range(16)])
 		debug("My password: %s" % self.mypassword)
-		passwdfile = os.path.join(self.updater.serverConfig['webadminDirectory'],'.htpasswd')
-		newContents = ""
-		if os.path.exists(passwdfile):
-			f = open(passwdfile,'r')
 
-			for line in f:
-				if line.split(':')[0] != 'ns2update':
-					newContents += line + "\n"
-			f.close()
-
-		hashedpassword = hashlib.md5("%s:%s:%s" % ("ns2update",self.updater.serverConfig['webadminDomain'],self.mypassword)).hexdigest()
-
-		newContents += "%s:%s:%s" % ("ns2update",self.updater.serverConfig['webadminDomain'],hashedpassword)
-		f = open(passwdfile,'w')
-		f.write(newContents)
-		f.close()
+		am = NS2AuthManager(os.path.join(self.updater.serverConfig['webadminDirectory'],'.htpasswd'))
+		am.updateUser('ns2update',self.updater.serverConfig['webadminDomain'],self.mypassword)
 
 		self.weburl = "http://%s:%s/" % (self.updater.serverConfig['webadminDomain'],self.updater.serverConfig['webadminPort'])
 
@@ -36,8 +24,7 @@ class NS2Rcon:
 		urllib2.install_opener(opener)
 
 	def sendCommand(self,command):
-		result = urllib2.urlopen(self.weburl,urllib.urlencode({'rcon':command,'command':'Send'}))
-		print result
+		urllib2.urlopen(self.weburl,urllib.urlencode({'rcon':command,'command':'Send'}))
 
 	def getPlayers(self):
 		result = urllib2.urlopen(self.weburl)

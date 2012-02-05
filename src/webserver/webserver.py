@@ -1,6 +1,7 @@
+from logging import handlers, debug, info, warning, error, critical
 import cherrypy, atexit, time, json, os, logging
 from jinja2 import Environment, FileSystemLoader
-from logging import handlers, debug, info, warning, error, critical
+
 
 from authcontroller import AuthController
 from serverlog import ServerLogUpdater
@@ -44,6 +45,9 @@ class WebServer:
 			cherrypy.tree.mount(ServerRcon(webserver=self,updater=updater), '/rcon')
 			cherrypy.tree.apps['/rcon'].log.access_log.setLevel(logging.WARNING)
 			cherrypy.tree.apps['/rcon'].log.error_log.setLevel(logging.WARNING)
+
+		cherrypy.server.socket_host = updater.serverConfig['webadminDomain']
+		cherrypy.server.socket_port = int(updater.serverConfig['webadminPort'])+1
 
 		cherrypy.tree.apps['/serverlog'].log.access_log.setLevel(logging.WARNING)
 		cherrypy.tree.apps['/serverlog'].log.error_log.setLevel(logging.WARNING)

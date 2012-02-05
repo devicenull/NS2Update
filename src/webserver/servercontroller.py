@@ -1,5 +1,6 @@
 import json, cherrypy
 from logging import debug, info, warning, error, critical
+from authcontroller import require
 
 class ServerController:
 	def __init__(self, webserver, updater):
@@ -11,6 +12,7 @@ class ServerController:
 		tmpl = self.webserver.template_env.get_template('layout.html')
 		return tmpl.render(rcon_available=self.updater.serverConfig['webadminActive'],page='index.html',username=self.webserver.getLogin())
 
+	@require()
 	@cherrypy.expose
 	def restart(self):
 		self.updater.stopServer()

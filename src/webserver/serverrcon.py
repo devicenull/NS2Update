@@ -1,10 +1,12 @@
 import json, cherrypy
+from authcontroller import require
 
 class ServerRcon:
 	def __init__(self, webserver, updater):
 		self.webserver = webserver
 		self.updater = updater
 
+	@require()
 	@cherrypy.expose
 	def index(self,command=None):
 		self.updater.serverRcon.sendCommand(command)
