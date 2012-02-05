@@ -2,13 +2,19 @@ import urllib2, subprocess, sys, os, time, argparse, psutil
 from threading import Thread
 from Queue import Queue, Empty
 from time import strftime
-from SRCDS import SRCDS
+from SourceQuery import SourceQuery
+from ns2config import NS2Config
+from ns2rcon import NS2Rcon
 
-def enqueue_output(out, queue, logFile):
+def enqueue_output(out, queue, logFile, chatqueue):
 	for line in iter(out.readline,''):
 		queue.put(line)
 		logFile.write(line)
 		logFile.flush()
+		#Chat All - devicenull: "test"
+		#Chat Team 0 - devicenull: "test2"
+		if line.startswith("Chat All") or line.startswith("Chat Team"):
+			chatqueue.put(line)
 	out.close()
 
 class NS2Update:
@@ -18,6 +24,7 @@ class NS2Update:
 	# It will push it all into outputQueue, as well as to serverLogFile
 	# outputQueue is currently unused, but will ultimately allow actions to be taken based on log events
 	outputQueue = None
+	chatQueue = None
 	outputThread = None
 	serverLogFile = None
 	# Time of the last update check
@@ -42,22 +49,17 @@ class NS2Update:
 		self.logger = logger
 		self.serverDir = serverDirectory
 		self.serverArgs = serverArgs
+		self.serverConfig = NS2Config(serverArgs,serverDirectory)
+		self.serverRcon = NS2Rcon(self,serverDirectory)
 
-		self.serverIP = '127.0.0.1'
-		self.serverPort = '27015'
 		self.restartWhenEmpty = False
 		self.noUpdateCheck = False
 
-		# Let's see if we can figure out what IP/port the server is running
 		argParser = argparse.ArgumentParser(prog='NS2')
-		argParser.add_argument('-ip',default='127.0.0.1')
-		argParser.add_argument('-port',default='27015')
 		argParser.add_argument('--restartwhenempty',action='store_true')
 		argParser.add_argument('--noupdatecheck',action='store_true')
 		try:
 			parsed,otherargs = argParser.parse_known_args(serverArgs.split(' '))
-			self.serverIP = parsed.ip
-			self.serverPort = parsed.port
 			self.restartWhenEmpty = parsed.restartwhenempty
 			self.noUpdateCheck = parsed.noupdatecheck
 		except:
@@ -70,25 +72,25 @@ class NS2Update:
 		self.serverArgs = self.serverArgs.replace('--restartwhenempty','').replace('--noupdatecheck','')
 
 		# Query is one port higher then join
-		self.serverPort = int(self.serverPort)+1
+		self.serverPort = int(self.serverConfig['port'])+1
 
-		self.logger.info("Detected server IP as %s:%i" % (self.serverIP,self.serverPort))
-		self.queryObject = SRCDS(self.serverIP,self.serverPort)
+		self.logger.info("Detected server IP as %s:%i" % (self.serverConfig['address'],self.serverPort))
+		self.queryObject = SourceQuery(self.serverConfig['address'],self.serverPort)
 
 		if self.restartWhenEmpty:
 			self.logger.info("Server will be automatically restarted when empty")
 		else:
 			self.logger.info("Server will *NOT* be automatically restarted when empty")
 
-		if self.serverArgs.lower().find("ns2gmovrmind") != -1:
+		if self.serverConfig['game'].lower().find("ns2gmovrmind") != -1:
 			self.getTickrate = True
 			self.logger.info("NSGmOvermind detected, tickrate stats are available")
-			self.logger.debug("NS2GmOvermind query: %s:%i" % (self.serverIP,self.serverPort+1))
-			self.overmindQueryObject = SRCDS(self.serverIP,self.serverPort+1)
+			self.logger.debug("NS2GmOvermind query: %s:%i" % (self.serverConfig['address'],self.serverPort+1))
+			self.overmindQueryObject = SourceQuery(self.serverConfig['address'],self.serverPort+1)
 		else:
 			self.getTickrate = False
 			self.logger.info("NS2GmOvermind *NOT* detected, tickrate stats unavailable")
-	
+
 	def findUpdateTool(self,extraPath):
 		if self.noUpdateCheck:
 			self.logger.info("Update checking disabled, not looking for hldsupdatetool")
@@ -107,7 +109,7 @@ class NS2Update:
 		if self.updatePath == "":
 			self.logger.critical("Unable to find hldsupdatetool.exe, please copy to server directory or see README")
 			raise NameError("Unable to find hldsupdatetool.exe")
-	
+
 	def doUpdate(self):
 		self.logger.info("Starting server update")
 
@@ -118,7 +120,7 @@ class NS2Update:
 				update.poll()
 
 		self.logger.info("Server update complete!")
-	
+
 	def startServer(self):
 		# If we are starting the server, it must be empty
 		self.serverEmptyCount = 0
@@ -135,16 +137,18 @@ class NS2Update:
 
 		# Setup everything we need to capture the server output
 		self.outputQueue = Queue()
-		self.outputThread = Thread(target=enqueue_output, args=(self.serverProc.stdout, self.outputQueue, self.serverLogFile))
+		self.chatQueue = Queue()
+		self.outputThread = Thread(target=enqueue_output, args=(self.serverProc.stdout, self.outputQueue, self.serverLogFile, self.chatQueue))
 		self.outputThread.daemon = True
 		self.outputThread.start()
-	
+		self.outputQueue.put("*** SERVER STARTED ***\n")
+
 	def stopServer(self):
 		if self.serverProc != None:
 			self.logger.info("Killing server")
 			self.serverProc.kill()
 			self.cleanupServer()
-	
+
 	def cleanupServer(self):
 		if self.outputThread != None:
 			self.outputThread.join()
@@ -153,7 +157,7 @@ class NS2Update:
 		self.outputThread = None
 		self.serverLogFile = None
 		self.serverProc = None
-	
+
 	# Tickrate is currently unsupported, but adding it here is easier then modfiying rrd's later
 	def recordStats(self,players,tickrate):
 		if not os.path.exists("%s/rrdtool.exe" % self.serverDir):
@@ -175,7 +179,7 @@ class NS2Update:
 		# Escape colons so rrdtool doesn't die
 		statsFile = statsFile.replace(":","\\:")
 		subprocess.Popen("%s/rrdtool.exe graph %s/ns2server.png --height 200 --width 400 --font DEFAULT:0:%s/rrdfont.ttf  DEF:memory=%s:memory:LAST CDEF:memorydisp=memory,10,/ DEF:cpu=%s:cpu:LAST DEF:players=%s:players:LAST DEF:tickrate=%s:tickrate:LAST AREA:cpu#00FF00:\"%% CPU Usage\"  LINE:memorydisp#FF0000:\"Memory usage (MB/10)\" LINE1:players#0000FF:\"Players\" LINE1:tickrate#000000:\"Tickrate\"" % (self.serverDir, self.serverDir, self.serverDir, statsFile, statsFile, statsFile, statsFile),stdout=subprocess.PIPE).wait()
-	
+
 	def think(self):
 		if not self.noUpdateCheck and time.time() - self.lastCheck > self.checkDelay:
 			self.logger.debug("Checking for server update...")
@@ -218,12 +222,12 @@ class NS2Update:
 		if time.time()-self.lastStart > 10:
 			# If we are going to attempt to restart the server when it's empty, we need to query it..
 			try:
-				details = self.queryObject.details()
-				currentPlayers = details['current_playercount']
+				details = self.queryObject.info()
+				currentPlayers = details['numplayers']
 
 				if self.restartWhenEmpty:
 
-					if details['current_playercount'] == 0:
+					if details['numplayers'] == 0:
 						self.serverEmptyCount += 1
 					else:
 						self.serverEmptyCount = 0
@@ -235,7 +239,7 @@ class NS2Update:
 						self.startServer()
 			except IOError:
 				pass
-				
+
 			try:
 				if self.getTickrate:
 					rules = self.overmindQueryObject.rules()

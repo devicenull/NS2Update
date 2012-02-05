@@ -1,3 +1,11 @@
 *.pyc
 pyinstaller-1.5.1
 console.spec
+build/
+cdr/
+cdrtool/
+dist/ns2update.log
+ns2update.log
+src/ns2update.log
+test
+warnconsole.txt

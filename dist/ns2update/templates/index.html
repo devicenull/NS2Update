@@ -1,0 +1,208 @@
+<script type="text/javascript">
+
+	/*
+	*	All tabs
+	*/
+	function refreshInfo()
+	{
+		$.get('/info/general/',function(data){
+			$('#servername').html(data.server_name);
+			$('#serverplayers').html(data.current_players+'/'+data.max_players);
+			$('#servermap').html(data.map);
+			$('#serverinfo').show();
+
+			updatePlayers();
+
+			setTimeout("refreshInfo()",10000);
+		})
+	}
+	refreshInfo();
+
+	function showTab(tabname)
+	{
+		$('#console').hide();
+		$('#players').hide();
+		$('#chat').hide();
+
+		$('#console_tab').removeClass('active');
+		$('#players_tab').removeClass('active');
+		$('#chat_tab').removeClass('active');
+
+		$('#'+tabname).show();
+		$('#'+tabname+'_tab').addClass('active');
+	}
+
+	function restartServer()
+	{
+		if (confirm("Are you sure you want to restart the server?"))
+		{
+			$.get('/restart');
+		}
+	}
+
+	/*
+	*	Server Console Tab
+	*/
+	var logpos = 0;
+	function updateLog()
+	{
+		$.ajax({
+			url: '/serverlog/',
+			data: {'logpos': logpos},
+			success: function(data) {
+				if (data.entries != "")
+				{
+					$('#serverlog').html($('#serverlog').html()+data.entries);
+					$('#serverlog').prop({'scrollTop':$('#serverlog').prop('scrollHeight')});
+				}
+				logpos = data.pos;
+				setTimeout("updateLog()",1000);
+			},
+			error:  function (data) {
+				setTimeout("updateLog()",1000);
+			},
+		})
+	}
+	{% if username != None %}
+	updateLog();
+	{% endif %}
+
+	function sendCommand()
+	{
+		$.post('/rcon/',{'command': $('#rconinput').val()})
+		$('#rconinput').val('');
+	}
+
+	$(document).ready(function() {
+		$("#rconinput").keyup(function(event){
+			if(event.keyCode == 13){
+				sendCommand();
+			}
+		});
+		{% if username != None %}
+			showTab('console');
+		{% else %}
+			showTab('players');
+		{% endif %}
+	});
+
+
+	/*
+	*	Active Players Tab
+	*/
+	function updatePlayers()
+	{
+		$.get('/rcon/players/',function(data){
+			thtml = '';
+			for (i=0;i<data.length;i++)
+			{
+				player = data[i];
+				thtml += '<tr><td>'+player.name+'</td><td>'+player.steamid+'</td><td>'+player.team+'</td><td>'+player.score+'</td><td>'+player.kills+'/'+player.deaths+'</td><td>'+player.resources+'</td><td>'+player.ping+'</td></tr>'
+			}
+			$('#playerstable tbody').html(thtml);
+		});
+	}
+
+	/*
+	*	Chat Tab
+	*/
+	var chatpos = 0;
+	function updateChat()
+	{
+		$.ajax({
+			url: '/serverlog/chat',
+			data: {'logpos': chatpos},
+			success: function(data) {
+				if (data.entries != "")
+				{
+					$('#chatlog').html($('#chatlog').html()+data.entries);
+					$('#chatlog').prop({'scrollTop':$('#chatlog').prop('scrollHeight')});
+				}
+				chatpos = data.pos;
+				setTimeout("updateChat()",1000);
+			},
+			error:  function (data) {
+				setTimeout("updateChat()",1000);
+			},
+		})
+	}
+	{% if username != None %}
+	updateChat();
+	{% endif %}
+</script>
+<div class="span2">
+	<div class="well sidebar-nav">
+		<ul class="nav nav-list">
+			<!--<li class="nav-header">Actions</li>-->
+			{% if username != None %}
+				<li id="console_tab" class="active"><a href="#" onclick="showTab('console');">Server Console</a></li>
+				<li id="chat_tab"><a href="#" onclick="showTab('chat');">Chat</a></li>
+			{% endif %}
+			<li id="players_tab"><a href="#" onclick="showTab('players');">Active Players</a></li>
+		</ul>
+	</div><!--/.well -->
+</div><!--/span-->
+
+<div class="span10">
+	<div  id="serverinfo" class="row">
+		<div class="span8">
+			<h3 id="servername"></h3>
+			<h4>
+				<span id="serverplayers"></span> on <span id="servermap"></span>
+			</h4>
+		</div>
+		<div class="span2">
+			{% if username != None %}
+				<button type="button" name="restartServer" id="restartServer" class="btn btn-danger" onclick="restartServer()">Restart Server</button>
+			{% endif %}
+		</div>
+	</div>
+	<br>
+	{% if username != None %}
+	<div id="console">
+		<div class="well" id="serverlog"></div>
+		<div style="vertical-align: middle;">
+		{% if rcon_available == "true" %}
+			<input type="text" name="command" id="rconinput">
+			<button class="btn-primary" type="button" style="margin-top: -7px;" onclick="sendCommand()">Submit</button>
+		{% else %}
+			Rcon not availabe, please modify webadminActive in your configuration file.
+		{% endif -%}
+		</div>
+	</div>
+	{% endif %}
+	<div id="players">
+		{% if rcon_available == "true" %}
+		<table class="table table-striped" id="playerstable">
+			<thead>
+				<th>Name</th>
+				<th>Steamid</th>
+				<th>Team</th>
+				<th>Score</th>
+				<th>Kills/Deaths</th>
+				<th>Resources</th>
+				<th>Ping</th>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		{% else %}
+			Active player list not available unless rcon is on
+		{% endif -%}
+	</div>
+	{% if username != None %}
+	{% if username != None %}
+	<div id="chat">
+		<div class="well" id="chatlog"></div>
+		<div style="vertical-align: middle;">
+		{% if rcon_available == "true" %}
+			<input type="text" name="command" id="rconinput">
+			<button class="btn-primary" type="button" style="margin-top: -7px;" onclick="sendCommand()">Submit</button>
+		{% else %}
+			Rcon not availabe, please modify webadminActive in your configuration file.
+		{% endif -%}
+		</div>
+	</div>
+	{% endif %}
+	{% endif %}
+</div>

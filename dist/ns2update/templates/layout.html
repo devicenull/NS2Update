@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>NS2Update</title>
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script src="/js/bootstrap.js"></script>
+
+		<link href="/css/bootstrap.css" rel="stylesheet">
+		<style>
+			body {
+				padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+			}
+
+			#serverlog, #chatlog
+			{
+				height: 600px;
+				width: 100%;
+				overflow: auto;
+				white-space: pre;
+			}
+
+			#rconinput
+			{
+				margin-top: 3px;
+				width: 90%;
+			}
+
+			#players, #chat
+			{
+				display: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<span class="brand">NS2Update</span>
+
+					<ul class="nav pull-right">
+						<li>
+							{% if username == None %}
+								<a href="/auth/login">Login</a>
+							{% else %}
+								<a href="/auth/logout">{{ username }} (Logout)</a>
+							{% endif %}
+						</li>
+					</ul>
+
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				{% include page %}
+			</div>
+		</div> <!-- /container -->
+	</body>
+</html>

@@ -26,4 +26,4 @@ This tool can optionally restart your server when it goes from full -> empty (Us
 THANKS TO:
 * CherryPy
 * Twitter's Bootstrap
-* SRCDS.PY
+* SourceLib
