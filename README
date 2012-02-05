@@ -27,3 +27,6 @@ This tool can optionally restart your server when it goes from full -> empty (Us
 If you wish to make use of the web interface, you need to enable web administration (see NS2's 'Dedicated Server Usage.txt' for info).  NS2Update will create itself a user when it starts up (a new password will be chosen on each restart).  Once you have enabled this, you need to add another user (for yourself!).  Once you have added the user, you can log into the ns2update webui with your rcon username/password.  Guest users will only be able to see the active player list.
 
 The web interface will bind to your 'webadminDomain' IP, with the port being one higher then 'webadminPort'.
+
+BUILD NOTES:
+I had to manually remove all entries to urllib.parse from CherryPY's _cpcompat file.  Something about how it was being handled was breaking pyInstaller.
