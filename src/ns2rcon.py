@@ -41,9 +41,9 @@ class NS2Rcon:
 
 			steamid = int(columns[6].text)
 			if steamid % 2 == 0:
-				steamid = "STEAM_0:1:%i" % (steamid/2)
-			else:
 				steamid = "STEAM_0:0:%i" % (steamid/2)
+			else:
+				steamid = "STEAM_0:1:%i" % (steamid/2)
 
 			players.append({
 				'name': columns[0].text
