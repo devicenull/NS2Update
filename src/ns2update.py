@@ -172,7 +172,7 @@ class NS2Update:
 		meminfo = p.get_memory_info()
 		rss = meminfo[0] / 1024 / 1024
 
-		self.logger.debug("CPU usage: %i, memory: %i MB, players: %i tickrate: %s" % (cpu, rss, players, tickrate))
+		self.logger.debug("CPU usage: %02i, memory: %04i MB, players: %02i tickrate: %02i" % (cpu, rss, players, int(tickrate)))
 
 		os.system("%s/rrdtool.exe update %s N:%i:%f:%i:%s" % (self.serverDir, statsFile, rss, cpu, players, tickrate))
 
