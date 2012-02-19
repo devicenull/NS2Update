@@ -3,7 +3,8 @@ a = Analysis([os.path.join(HOMEPATH,'support\\_mountzlib.py'), os.path.join(HOME
              pathex=['c:\\Source\\NS2Update'], hookspath=['C:\\Source\\NS2Update\\hooks'], excludes=['urllib.parse'])
 pyz = PYZ(a.pure)
 exe = EXE( pyz,
-          a.scripts + [('v', '', 'OPTION')],
+          #Verbose: a.scripts + [('v', '', 'OPTION')],
+          a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
