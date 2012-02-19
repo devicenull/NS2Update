@@ -1,0 +1,46 @@
+144,156c144,149
+< try:
+<     # Python 3
+<     from urllib.parse import urljoin, urlencode
+<     from urllib.parse import quote, quote_plus
+<     from urllib.request import unquote, urlopen
+<     from urllib.request import parse_http_list, parse_keqv_list
+< except:
+<     # Python 2
+<     from urlparse import urljoin
+<     from urllib import urlencode, urlopen
+<     from urllib import quote, quote_plus
+<     from urllib import unquote
+<     from urllib2 import parse_http_list, parse_keqv_list
+---
+> # Python 2
+> from urlparse import urljoin
+> from urllib import urlencode, urlopen
+> from urllib import quote, quote_plus
+> from urllib import unquote
+> from urllib2 import parse_http_list, parse_keqv_list
+193,198c186
+< try:
+<     # Python 3
+<     import builtins
+< except ImportError:
+<     # Python 2
+<     import __builtin__ as builtins
+---
+> import __builtin__ as builtins
+251,260c239,242
+< try:
+<     # Python 3
+<     from urllib.parse import unquote as parse_unquote
+<     def unquote_qs(atom, encoding, errors='strict'):
+<         return parse_unquote(atom.replace('+', ' '), encoding=encoding, errors=errors)
+< except ImportError:
+<     # Python 2
+<     from urllib import unquote as parse_unquote
+<     def unquote_qs(atom, encoding, errors='strict'):
+<         return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)
+---
+> # Python 2
+> from urllib import unquote as parse_unquote
+> def unquote_qs(atom, encoding, errors='strict'):
+>     return parse_unquote(atom.replace('+', ' ')).decode(encoding, errors)

@@ -44,6 +44,8 @@ class NS2Update:
 	lastStart = 0
 	# Should we disable update checking?
 	noUpdateCheck = False
+	# This gets set to true when the server has had players on it
+	hasHadPlayers = False
 
 	def __init__(self, logger, UpdateToolPath, serverDirectory, serverArgs):
 		self.logger = logger
@@ -124,6 +126,7 @@ class NS2Update:
 	def startServer(self):
 		# If we are starting the server, it must be empty
 		self.serverEmptyCount = 0
+		self.hasHadPlayers = False
 		self.lastStart = time.time()
 
 		# Actually start the server process
@@ -231,8 +234,9 @@ class NS2Update:
 						self.serverEmptyCount += 1
 					else:
 						self.serverEmptyCount = 0
+						self.hasHadPlayers = True
 
-					if self.serverEmptyCount > 5:
+					if self.serverEmptyCount > 5 and self.hasHadPlayers:
 						self.logger.info("Server now empty, restarting")
 						self.stopServer()
 						time.sleep(1)

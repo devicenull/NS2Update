@@ -1,6 +1,5 @@
 *.pyc
 pyinstaller-1.5.1*
-console.spec
 build/
 cdr/
 cdrtool/
