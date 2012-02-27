@@ -11,7 +11,7 @@ FEATURES:
 * Server remote control (view server log, players, chat remotely.  Send rcon commands and see the server's response)
 
 INSTALLATION:
-1) Grab all the files from your dist/ directory, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  Note: I am no longer producing 32bit builds.  If you need them, please contact me on the NS2 forums and I can start again.
+1) Grab all the files from your dist/ directory, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  If you are not on a 64bit OS, you should get the 32bit build of ns2update.exe from the dist-x86 directory (rrdtool is already 32bit).
 2) In whatever script you use to start the server, replace 'Server.exe' with 'ns2update.exe'. (If you don't use a script, just start ns2update.exe instead of Server.exe)
 3) (not required) Apply this registry tweak so memory read errors don't hang the server: http://www.zhacks.com/2010/04/10/disable-application-error-memory-could-not-be-read-popup/ .  If you choose not to apply this, it's possible for your server to crash and not be automatically updated.
 
