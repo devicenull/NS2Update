@@ -35,4 +35,4 @@ BUILD NOTES:
 ** CherryPy 3.2
 ** PSUtil
 ** PyWin32
-* You should use the console.spec file provide (though you need to update the paths in it!), or generate your own and make sure you add "hookspath=['C:\\Source\\NS2Update\\hooks']" to the Analysis constructor
+* You should use the console.spec file provided (though you need to update the paths in it!), or generate your own and make sure you add "hookspath=['C:\\Source\\NS2Update\\hooks']" to the Analysis constructor
