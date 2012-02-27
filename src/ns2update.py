@@ -169,7 +169,8 @@ class NS2Update:
 
 		statsFile = "%s/ns2update.rrd" % (self.serverDir)
 		if not os.path.exists(statsFile):
-			os.system("%s/rrdtool.exe create %s DS:memory:GAUGE:300:0:U DS:cpu:GAUGE:600:0:U DS:players:GAUGE:600:0:U DS:tickrate:GAUGE:600:0:U RRA:LAST:0.5:1:2016 RRA:AVERAGE:0.5:2:2016" % (self.serverDir,statsFile))
+			#os.system("\"%s/rrdtool.exe\" create \"%s\" DS:memory:GAUGE:300:0:U DS:cpu:GAUGE:600:0:U DS:players:GAUGE:600:0:U DS:tickrate:GAUGE:600:0:U RRA:LAST:0.5:1:2016 RRA:AVERAGE:0.5:2:2016" % (self.serverDir,statsFile))
+			subprocess.Popen(["%s/rrdtool.exe" % self.serverDir, "create", statsFile, "DS:memory:GAUGE:300:0:U", "DS:cpu:GAUGE:600:0:U", "DS:players:GAUGE:600:0:U", "DS:tickrate:GAUGE:600:0:U", "RRA:LAST:0.5:1:2016", "RRA:AVERAGE:0.5:2:2016"])
 
 		p = psutil.Process(self.serverProc.pid)
 		cpu = p.get_cpu_percent(interval=1.0)
@@ -178,11 +179,12 @@ class NS2Update:
 
 		self.logger.debug("CPU usage: %02i, memory: %04i MB, players: %02i tickrate: %02i" % (cpu, rss, players, int(tickrate)))
 
-		os.system("%s/rrdtool.exe update %s N:%i:%f:%i:%s" % (self.serverDir, statsFile, rss, cpu, players, tickrate))
+		#os.system("\"%s/rrdtool.exe\" update \"%s\" N:%i:%f:%i:%s" % (self.serverDir, statsFile, rss, cpu, players, tickrate))
+		subprocess.Popen(["%s/rrdtool.exe" % self.serverDir, "update", statsFile, "N:%i:%f:%i:%s" % (rss, cpu, players, tickrate)])
 
 		# Escape colons so rrdtool doesn't die
 		statsFile = statsFile.replace(":","\\:")
-		subprocess.Popen("%s/rrdtool.exe graph %s/ns2server.png --height 200 --width 400 --font DEFAULT:0:%s/rrdfont.ttf  DEF:memory=%s:memory:LAST CDEF:memorydisp=memory,10,/ DEF:cpu=%s:cpu:LAST DEF:players=%s:players:LAST DEF:tickrate=%s:tickrate:LAST AREA:cpu#00FF00:\"%% CPU Usage\"  LINE:memorydisp#FF0000:\"Memory usage (MB/10)\" LINE1:players#0000FF:\"Players\" LINE1:tickrate#000000:\"Tickrate\"" % (self.serverDir, self.serverDir, self.serverDir, statsFile, statsFile, statsFile, statsFile),stdout=subprocess.PIPE).wait()
+		subprocess.Popen("\"%s/rrdtool.exe\" graph \"%s/ns2server.png\" --height 200 --width 400 --font DEFAULT:0:\"%s\"/rrdfont.ttf  DEF:memory=\"%s\":memory:LAST CDEF:memorydisp=memory,10,/ DEF:cpu=\"%s\":cpu:LAST DEF:players=\"%s\":players:LAST DEF:tickrate=\"%s\":tickrate:LAST AREA:cpu#00FF00:\"%% CPU Usage\"  LINE:memorydisp#FF0000:\"Memory usage (MB/10)\" LINE1:players#0000FF:\"Players\" LINE1:tickrate#000000:\"Tickrate\"" % (self.serverDir, self.serverDir, self.serverDir, statsFile, statsFile, statsFile, statsFile),stdout=subprocess.PIPE).wait()
 
 	def think(self):
 		if not self.noUpdateCheck and time.time() - self.lastCheck > self.checkDelay:
