@@ -27,7 +27,10 @@ class NS2Rcon:
 		urllib2.urlopen(self.weburl,urllib.urlencode({'rcon':command,'command':'Send'}))
 
 	def getPlayers(self):
-		result = urllib2.urlopen(self.weburl)
+		try:
+			result = urllib2.urlopen(self.weburl)
+		except URLError:
+			return []
 		soup = BeautifulSoup(result.read())
 		if soup.prettify() == '' or soup.body == None:
 			return []

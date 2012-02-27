@@ -5,23 +5,30 @@ from authcontroller import require
 
 def updateLogList(slu):
 	while 1==1:
+		logUpdated = False
 		if slu.updater.outputQueue != None:
 			try:
 				line = slu.updater.outputQueue.get_nowait()
 				#print "Assign '%s' to %i" % (line,slu.currentpos)
-				slu.loglist[slu.currentpos] = line
+				slu.loglist[slu.currentpos] = line+"\n"
 				slu.currentpos = (slu.currentpos+1) % slu.MAXLOGENTRIES
+				logUpdated = True
 			except Empty:
 				pass
 		if slu.updater.chatQueue != None:
 			try:
 				line = slu.updater.chatQueue.get_nowait()
 				#print "Assign '%s' to %i" % (line,slu.currentpos)
-				slu.chatlist[slu.currentchatpos] = line
+				slu.chatlist[slu.currentchatpos] = line+"\n"
 				slu.currentchatpos = (slu.currentchatpos+1) % slu.MAXLOGENTRIES
+				logUpdated = True
 			except Empty:
 				pass
-		time.sleep(1)
+		# If we found any data in the logs, immediately try to get more
+		# If we didn't find any, delay for a second before we check again
+		# This ensures that we dont delay for 1s between printing every line in a stack trace
+		if not logUpdated:
+			time.sleep(1)
 
 class ServerLogUpdater:
 	def __init__(self, webserver, updater):

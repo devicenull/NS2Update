@@ -60,7 +60,10 @@
 				if (data.entries != "")
 				{
 					$('#serverlog').html($('#serverlog').html()+data.entries);
-					$('#serverlog').prop({'scrollTop':$('#serverlog').prop('scrollHeight')});
+					if ($('#autoscroll').attr('checked'))
+					{
+						$('#serverlog').prop({'scrollTop':$('#serverlog').prop('scrollHeight')});
+					}
 				}
 				logpos = data.pos;
 				setTimeout("updateLog()",1000);
@@ -175,6 +178,8 @@
 		{% else %}
 			Rcon not availabe, please modify webadminActive in your configuration file.
 		{% endif -%}
+		<br>
+		<input type="checkbox" id="autoscroll" checked> Auto-scroll
 		</div>
 	</div>
 	{% endif %}
