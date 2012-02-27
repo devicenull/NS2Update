@@ -8,8 +8,9 @@ from ns2rcon import NS2Rcon
 
 def enqueue_output(out, queue, logFile, chatqueue):
 	for line in iter(out.readline,''):
+		line = line.rstrip("\r\n")
 		queue.put(line)
-		logFile.write(line)
+		logFile.write(line+"\n")
 		logFile.flush()
 		#Chat All - devicenull: "test"
 		#Chat Team 0 - devicenull: "test2"
@@ -131,7 +132,7 @@ class NS2Update:
 
 		# Actually start the server process
 		self.serverProc = subprocess.Popen("Server.exe %s" % self.serverArgs, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-		self.logger.info("Server started, pid %i" % (self.serverProc.pid))
+		self.logger.info("Server started, pid %i version %s" % (self.serverProc.pid,self.currentVersion))
 
 		# Open up the log file
 		logName = strftime("%Y.%m.%d.%H%M.log")

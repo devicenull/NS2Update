@@ -22,7 +22,6 @@ class NS2AuthManager:
 				,'password': data[2]
 			})
 		f.close()
-		print users
 		return users
 
 	# For the given username, domain entry: add the user if it is not present, or update it's password if it is
@@ -50,6 +49,10 @@ class NS2AuthManager:
 		newContents = ""
 		for user in users:
 			newContents += "%s:%s:%s\n" % (user['username'],user['domain'],user['password'])
+
+		directory = os.path.dirname(self.filename)
+		if not os.path.exists(directory):
+			os.makedirs(directory,0777)
 
 		f = open(self.filename,'w')
 		f.write(newContents)

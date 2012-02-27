@@ -59,11 +59,8 @@
 			success: function(data) {
 				if (data.entries != "")
 				{
-					$('#serverlog').append(data.entries);
-					if ($('#autoscroll').attr('checked'))
-					{
-						$('#serverlog').prop({'scrollTop':$('#serverlog').prop('scrollHeight')});
-					}
+					$('#serverlog').html($('#serverlog').html()+data.entries);
+					$('#serverlog').prop({'scrollTop':$('#serverlog').prop('scrollHeight')});
 				}
 				logpos = data.pos;
 				setTimeout("updateLog()",1000);
@@ -125,7 +122,7 @@
 			success: function(data) {
 				if (data.entries != "")
 				{
-					$('#chatlog').append(data.entries);
+					$('#chatlog').html($('#chatlog').html()+data.entries);
 					$('#chatlog').prop({'scrollTop':$('#chatlog').prop('scrollHeight')});
 				}
 				chatpos = data.pos;
@@ -170,7 +167,7 @@
 	<br>
 	{% if username != None %}
 	<div id="console">
-		<div class="well" id="serverlog"></div>
+		<pre class="well" id="serverlog"></pre>
 		<div style="vertical-align: middle;">
 		{% if rcon_available == "true" %}
 			<input type="text" name="command" id="rconinput">
@@ -178,8 +175,6 @@
 		{% else %}
 			Rcon not availabe, please modify webadminActive in your configuration file.
 		{% endif -%}
-		<br>
-		<input type="checkbox" id="autoscroll" checked> Auto-scroll
 		</div>
 	</div>
 	{% endif %}
