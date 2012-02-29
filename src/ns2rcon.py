@@ -29,7 +29,7 @@ class NS2Rcon:
 	def getPlayers(self):
 		try:
 			result = urllib2.urlopen(self.weburl)
-		except URLError:
+		except urllib2.URLError:
 			return []
 		soup = BeautifulSoup(result.read())
 		if soup.prettify() == '' or soup.body == None:

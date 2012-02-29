@@ -30,10 +30,12 @@
 		$('#console').hide();
 		$('#players').hide();
 		$('#chat').hide();
+		$('#performance').hide();
 
 		$('#console_tab').removeClass('active');
 		$('#players_tab').removeClass('active');
 		$('#chat_tab').removeClass('active');
+		$('#performance_tab').removeClass('active');
 
 		$('#'+tabname).show();
 		$('#'+tabname+'_tab').addClass('active');
@@ -139,6 +141,32 @@
 	{% if username != None %}
 	updateChat();
 	{% endif %}
+
+	/*
+	*	Performance Tab
+	*/
+	function updatePerformance()
+	{
+		d = new Date();
+		$('#servergraph').attr('src','/ns2server.png?'+d.getTime());
+		$.ajax({
+			url: '/perf/',
+			success: function(data) {
+				if (data.entries != "")
+				{
+					$('#chatlog').html($('#chatlog').html()+data.entries);
+					$('#chatlog').prop({'scrollTop':$('#chatlog').prop('scrollHeight')});
+				}
+				$('#perf_cpu').html(data.cpu+'%');
+				$('#perf_memory').html(data.memory+' MB');
+				$('#perf_tickrate').html(data.tickrate);
+			},
+		})
+
+
+		setTimeout("updatePerformance()",60000)
+	}
+	updatePerformance();
 </script>
 <div class="span2">
 	<div class="well sidebar-nav">
@@ -149,6 +177,7 @@
 				<li id="chat_tab"><a href="#" onclick="showTab('chat');">Chat</a></li>
 			{% endif %}
 			<li id="players_tab"><a href="#" onclick="showTab('players');">Active Players</a></li>
+			<li id="performance_tab"><a href="#" onclick="showTab('performance');">Performance</a></li>
 		</ul>
 	</div><!--/.well -->
 </div><!--/span-->
@@ -203,7 +232,6 @@
 		{% endif -%}
 	</div>
 	{% if username != None %}
-	{% if username != None %}
 	<div id="chat">
 		<div class="well" id="chatlog"></div>
 		<div style="vertical-align: middle;">
@@ -217,5 +245,21 @@
 		</div>
 	</div>
 	{% endif %}
-	{% endif %}
+	<div id="performance">
+		<table class="table" id="perftable">
+			<tr>
+				<td>Last CPU Usage:</td>
+				<td id="perf_cpu">0</td>
+			</tr>
+			<tr>
+				<td>Last Memory:</td>
+				<td id="perf_memory">0</td>
+			</tr>
+			<tr>
+				<td>Last Tickrate:</td>
+				<td id="perf_tickrate">0</td>
+			</tr>
+		</table>
+		<img id="servergraph" src="/ns2server.png">
+	</div>
 </div>

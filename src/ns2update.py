@@ -47,6 +47,10 @@ class NS2Update:
 	noUpdateCheck = False
 	# This gets set to true when the server has had players on it
 	hasHadPlayers = False
+	# Store the last stats values
+	lastCPU = 0
+	lastMemory = 0
+	lastTickrate = 0
 
 	def __init__(self, logger, UpdateToolPath, serverDirectory, serverArgs):
 		self.logger = logger
@@ -178,6 +182,9 @@ class NS2Update:
 		rss = meminfo[0] / 1024 / 1024
 
 		self.logger.debug("CPU usage: %02i, memory: %04i MB, players: %02i tickrate: %02i" % (cpu, rss, players, int(tickrate)))
+		self.lastCPU = cpu
+		self.lastMemory = rss
+		self.lastTickrate = tickrate
 
 		#os.system("\"%s/rrdtool.exe\" update \"%s\" N:%i:%f:%i:%s" % (self.serverDir, statsFile, rss, cpu, players, tickrate))
 		subprocess.Popen(["%s/rrdtool.exe" % self.serverDir, "update", statsFile, "N:%i:%f:%i:%s" % (rss, cpu, players, tickrate)])

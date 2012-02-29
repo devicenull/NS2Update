@@ -8,6 +8,7 @@ from serverlog import ServerLogUpdater
 from serverinfo import ServerInfo
 from serverrcon import ServerRcon
 from servercontroller import ServerController
+from perfinfo import PerfInfo
 
 class WebServer:
 	updater = None
@@ -30,12 +31,19 @@ class WebServer:
 				{ 'tools.staticdir.on': True,
 				'tools.staticdir.dir': os.path.join(os.getcwd(),'ns2update/js/')
 				}
+			,'/ns2server.png':
+				{
+				'tools.staticfile.on': True,
+				'tools.staticfile.filename': os.path.join(os.getcwd(),'ns2server.png')
+				}
 		}
+
 		cherrypy.log.error_log.setLevel(logging.WARNING)
 		cherrypy.log.access_log.setLevel(logging.WARNING)
 		cherrypy.tree.mount(AuthController(webserver=self),'/auth')
 		cherrypy.tree.mount(ServerLogUpdater(webserver=self,updater=updater), '/serverlog')
 		cherrypy.tree.mount(ServerInfo(webserver=self,updater=updater), '/info')
+		cherrypy.tree.mount(PerfInfo(webserver=self,updater=updater), '/perf')
 		app = cherrypy.tree.mount(ServerController(webserver=self,updater=updater),'/',config)
 		app.log.access_log.setLevel(logging.WARNING)
 		app.log.error_log.setLevel(logging.WARNING)
@@ -53,6 +61,8 @@ class WebServer:
 		cherrypy.tree.apps['/serverlog'].log.error_log.setLevel(logging.WARNING)
 		cherrypy.tree.apps['/info'].log.access_log.setLevel(logging.WARNING)
 		cherrypy.tree.apps['/info'].log.error_log.setLevel(logging.WARNING)
+		cherrypy.tree.apps['/perf'].log.access_log.setLevel(logging.WARNING)
+		cherrypy.tree.apps['/perf'].log.error_log.setLevel(logging.WARNING)
 
 		cherrypy.engine.start()
 		atexit.register(cherrypy.engine.stop)
