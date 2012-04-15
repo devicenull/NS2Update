@@ -11,6 +11,6 @@ class PerfInfo:
 		cherrypy.response.headers['content-type'] = 'application/json'
 		return json.dumps({
 			'cpu': self.updater.lastCPU
-			,'memory': self.updater.lastMemory
+			,'memory': int(self.updater.lastMemory)
 			,'tickrate': self.updater.lastTickrate
 		})

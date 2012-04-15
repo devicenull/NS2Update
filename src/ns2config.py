@@ -29,7 +29,7 @@ class NS2Config(dict):
 	def __init__(self,cmdline,serverdir):
 		self.serverdir = serverdir
 		self.config = {
-			'mapName': 'ns2_rockdown'
+			'mapName': 'ns2_mineshaft'
 			,'address': '127.0.0.1'
 			,'playerLimit': 10
 			,'webadminActive': 0
@@ -41,20 +41,30 @@ class NS2Config(dict):
 			,'serverName': 'NS2 Dedicated Server'
 			,'webadminDirectory': './web'
 			,'webadminDomain': 'localhost'
-			,'file': os.environ['APPDATA']+'/Natural Selection 2/server.xml'
+			,'file': 'server.xml'
 		}
 		self.parseCmdLine(cmdline)
-		if not os.path.exists(self.config['file']):
-			# Hmm, maybe it's in the server directory?
-			if os.path.exists(os.path.join(serverdir,self.config['file'])):
-				self.config['file'] = os.path.join(serverdir,self.config['file'])
-				info("Found config file at %s" % self.config['file'])
-				self.parseConfig(self.config['file'])
+
+		configfilepath = {
+			os.path.join('.',self.config['file'])
+			,os.path.join(serverdir,'server.xml')
+			,os.path.join(os.environ['APPDATA'], 'Natural Selection 2', 'server.xml')
+		}
+
+		configloaded = False
+		for configfile in configfilepath:
+			if os.path.exists(configfile):
+				info("Checking NS2 server config file %s" % configfile)
+				self.parseConfig(configfile)
+				configloaded = True
+				break
 			else:
-				warning("Unable to find config file (checked %s and %s)" % (self.config['file'],os.path.join(serverdir,self.config['file'])))
-		else:
-			info("Found config file at %s" % self.config['file'])
-			self.parseConfig(self.config['file'])
+				error("Checking NS2 server config file %s: file does not exist" % configfile)
+
+		if not configloaded:
+			error("No NS2 server configuration could be found.")
+			info("Please specify the path to the NS2 server config file with the parameter -file #Filepath#.")
+			info("Using default config settings %s" % self.config)
 
 	def parseCmdLine(self,cmdline):
 		argParser = argparse.ArgumentParser(prog='NS2')
@@ -68,7 +78,7 @@ class NS2Config(dict):
 		argParser.add_argument('-password',default='')
 		argParser.add_argument('-game',default='')
 		argParser.add_argument('-save',default=0)
-									
+
 		try:
 			parsed,otherargs = argParser.parse_known_args(cmdline.split(' '))
 			self.config['file'] = parsed.file

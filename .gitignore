@@ -9,3 +9,4 @@ src/ns2update.log
 test
 warnconsole.txt
 logdict*.log
+env.cmd

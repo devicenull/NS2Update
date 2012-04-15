@@ -36,3 +36,5 @@ BUILD NOTES:
 ** PSUtil
 ** PyWin32
 * You should use the console.spec file provided (though you need to update the paths in it!), or generate your own and make sure you add "hookspath=['C:\\Source\\NS2Update\\hooks']" to the Analysis constructor
+
+To use the provided build scripts, copy env.cmd.sample to env.cmd and update the paths in it.  They should point at your x64 and x86 installs of Python (You need to install all the dependencies twice, once for each version)
