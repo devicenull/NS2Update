@@ -1,7 +1,13 @@
 #!/bin/python
-import logging, sys, time, signal, os
+import logging
+import sys
+import time
+import signal
+import os
+import io
 from logging import debug, info, warning, error, critical
 from ns2update import NS2Update
+from ConfigParser import SafeConfigParser
 
 
 logging.basicConfig(level=logging.DEBUG,
@@ -15,8 +21,6 @@ console.setFormatter(logging.Formatter('[NS2Update] %(levelname)-8s %(message)s'
 logging.getLogger('').addHandler(console)
 logger = logging.getLogger('')
 
-from webserver.webserver import WebServer
-
 serverArgs = " ".join(sys.argv[1:])
 serverDir = os.getcwd()
 debug("Command line args: %s" % (serverArgs))
@@ -27,24 +31,35 @@ def exitHandler(signalType, stack):
 	updater.stopServer()
 	time.sleep(1)
 
-try:
-	os.mkdir("serverlogs")
-except WindowsError:
-	pass
+default_config = """
+[ns2update]
+noUpdateCheck=false
+steamcmd_binary=C:\\path\\to\\steamcmd.exe
+steamcmd_user=server_username
+steamcmd_password=server_password
+steamcmd_appid=4940
+server_directory=serverDir
+server_args=serverArgs
+server_binary=server.exe
+"""
 
-updatePath = ''
-if os.path.exists("%s/ns2update.cfg" % (serverDir)):
-	debug("Found ns2update.cfg file, loading hldsupdatetool path")
-	cfg = open("%s/ns2update.cfg" % (serverDir),"r")
-	updatePath = cfg.readline()
-	cfg.close()
-	debug("Added path from config file: %s" % updatePath)
+config = SafeConfigParser()
+config.readfp(io.BytesIO(default_config))
 
-if not os.path.exists("%s/rrdtool.exe" % serverDir):
-	warning("rrdtool.exe not found in %s.  Resource graphs will not be generated" % serverDir)
+if not os.path.exists('ns2update.ini'):
+	info("Unable to find ns2update.ini, creating default version")
+	warning("Updates will not work until you configure ns2update.ini!")
+	inifile = open('ns2update.ini','w')
+	inifile.write(default_config)
+	inifile.close()
 
-updater = NS2Update(logger=logging.getLogger(''),UpdateToolPath=updatePath,serverDirectory = serverDir,serverArgs=serverArgs)
-ws = WebServer(updater=updater)
+debug("Loading config file...")
+config.read('ns2update.ini')
+
+config.set('ns2update','server_directory',serverDir)
+config.set('ns2update','server_args',serverArgs)
+
+updater = NS2Update(logger=logging.getLogger(''),config=config)
 
 # Don't define the exit handler until after the updater object is available
 signal.signal(signal.SIGINT, exitHandler)

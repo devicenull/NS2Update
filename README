@@ -1,40 +1,48 @@
 NS2Update
 by: Brian "devicenull" Rak
 
-This tool will automatically keep a NS2 server update to date.  It will query for an update every 5 minutes, and if one is found will kill the server and start HldsUpdateTool
+This tool will automatically keep a NS2 server update to date.  It will query for an update every 5 minutes, and if one is found will kill the server and start SteamCmd.  Earlier versions of this tool had additional functionality, however many of those features were integrated into NS2.
 
 FEATURES:
 * Automatic updates
 * Automatic restart on crash
-* Server logs archived
-* Performance graphs (cpu, memory, tickrate, players)
-* Server remote control (view server log, players, chat remotely.  Send rcon commands and see the server's response)
 
 INSTALLATION:
-1) Grab all the files from your dist/ directory, and upload them to your server (they should go in the same directory as your existing Server.exe binary).  If you are not on a 64bit OS, you should get the 32bit build of ns2update.exe from the dist-x86 directory (rrdtool is already 32bit).
-2) In whatever script you use to start the server, replace 'Server.exe' with 'ns2update.exe'. (If you don't use a script, just start ns2update.exe instead of Server.exe)
-3) (not required) Apply this registry tweak so memory read errors don't hang the server: http://www.zhacks.com/2010/04/10/disable-application-error-memory-could-not-be-read-popup/ .  If you choose not to apply this, it's possible for your server to crash and not be automatically updated.
+1) Take ns2update.exe from the appropriate dist directory (for 64bit OS, use dist/, for 32bit OS use dist-x86/) and copy it to your server directory
+2) Run ns2update.exe manually once.  This will generate ns2update.ini, which you need to edit to configure steamcmd. Note that you should not replace server_directory or server_args, these are only used internally and will be overwritten.
+3) In whatever script you use to start the server, replace 'Server.exe' with 'ns2update.exe'. (If you don't use a script, just start ns2update.exe instead of Server.exe)
+4) (not required) Apply this registry tweak so memory read errors don't hang the server: http://www.zhacks.com/2010/04/10/disable-application-error-memory-could-not-be-read-popup/ .  If you choose not to apply this, it's possible for your server to crash and not be automatically updated.
 
 Once the tool is running, it will automatically start your server up, then check for updates every 5 minutes.  It will check that the server is still running every 5 seconds, and restart it if it has crashed.
 
-Every 5 minutes the cpu/memory/tickrate/players will be recorded and a graph generated.  This graph will be saved to ns2server.png in the same directory as Server.exe.  NOTE: tickrate will only be recorded if you are running NS2GmOvermind.  The stock server does not have any way to retrieve this information.
-
 CONFIGURATION:
-The tool will check the server directory and it's parent directory for hldsupdatetool.exe.  If you have it somewhere else, create a ns2update.cfg file in your server directory.  Put the full path (include hldsupdatetool.exe) to the update tool on the first line.
+All configuration options are now stored in ns2update.ini.  See below for what they do
 
-This tool can optionally restart your server when it goes from full -> empty (Useful due to the resource leaks in NS2).  To enable this, add "--restartwhenempty" to your command line.  Note that if you are running the server on something other then the default IP/port, you must set the IP and port using the "-ip X.X.X.X -port 27016" command line arguments in order to make use of this feature.
+* noUpdateCheck
+If this is set to true, ns2update will only make sure the server stays running.  It will not attempt to automatically update the server
 
-If you wish to make use of the web interface, you need to enable web administration (see NS2's 'Dedicated Server Usage.txt' for info).  NS2Update will create itself a user when it starts up (a new password will be chosen on each restart).  Once you have enabled this, you need to add another user (for yourself!).  Once you have added the user, you can log into the ns2update webui with your rcon username/password.  Guest users will only be able to see the active player list.
+* steamcmd_binary
+This needs to be set to the full path to steamcmd.exe
 
-The web interface will bind to your 'webadminDomain' IP, with the port being one higher then 'webadminPort'.
+* steamcmd_user
+You need to create a new Steam account for your server to use.  This account does *not* need to have a valid NS2 cdkey, and should *not* be the same as your normal account.  If you use your normal account here, you will get kicked off steam every 5 minutes when update checks happen
+
+* steamcmd_password
+This should be the plain text password for your server's steam account.  I know, plaintext sucks here, but you're not using your normal steam account, right?
+
+* steamcmd_appid
+This is the appid that should be kept up to date.  For NS2, this is 4940.  If you're trying to sue this for another game, you'll have to look this up yourself (Valve's wiki would be a good place to start)
+
+* server_directory, server_args
+NS2Update uses these internally to keep track of what arguments the server should have.  If you change these, they will be overwritten on the next restart.  server_directory gets set to the current working directory.  server_args gets set to whatever arugments you pass on the command line
+
+* server_binary
+This should be 'server.exe' for NS2.  This needs to be the actual exe to launch the server, updates will break if you make this a batch file instead.
 
 BUILD NOTES:
-* If you are using CherryPY 3.2 and wish to produce a binary using PyInstaller, you must apply the diff in diffs/ to the _cpcompat.py file.  This is due to a bug in PyInstaller.
 * You need the following installed to build:
-** BeautifulSoup 4
-** CherryPy 3.2
-** PSUtil
 ** PyWin32
-* You should use the console.spec file provided (though you need to update the paths in it!), or generate your own and make sure you add "hookspath=['C:\\Source\\NS2Update\\hooks']" to the Analysis constructor
+** PyInstaller (for generating exe files)
+* You can use the console.spec file provided (though you need to update the paths in it!), or generate your own (see PyInstaller documentation)
 
-To use the provided build scripts, copy env.cmd.sample to env.cmd and update the paths in it.  They should point at your x64 and x86 installs of Python (You need to install all the dependencies twice, once for each version)
+To use the provided build scripts, copy env.cmd.sample to env.cmd and update the paths in it.  They should point at your x64 and x86 installs of Python (You need to install all the dependencies twice, once for each architecture)
