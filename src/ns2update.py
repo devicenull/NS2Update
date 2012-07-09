@@ -1,4 +1,7 @@
-import subprocess, os, time
+import subprocess
+import os
+import time
+import sys
 from time import strftime
 
 class NS2Update:
@@ -14,7 +17,6 @@ class NS2Update:
 		self.config = config
 
 		self.findUpdateTool()
-
 
 	def get(self,key):
 		return self.config.get('ns2update',key,'')
@@ -43,7 +45,7 @@ class NS2Update:
 	def doUpdate(self):
 		self.logger.info("Starting server update")
 
-		update = subprocess.Popen("%s +login %s %s +force_install_dir %s +app_update %s verify +quit" % (self.get('steamcmd_binary'),self.get('steamcmd_user'),self.get('steamcmd_password'),self.get('server_directory'),self.get('steamcmd_appid')))
+		update = subprocess.Popen("%s +login %s %s +force_install_dir %s +app_update %s verify +quit" % (self.get('steamcmd_binary'),self.get('steamcmd_user'),self.get('steamcmd_password'),self.get('server_directory'),self.get('steamcmd_appid_download')))
 		if update:
 			while update.returncode == None:
 				time.sleep(5)
@@ -73,7 +75,7 @@ class NS2Update:
 		if not self.getBool('noUpdateCheck') and time.time() - self.lastCheck > 300:
 			desiredVersion = self.getCurrentSteamVersion()
 
-			if desiredVersion > self.currentVersion:
+			if desiredVersion != self.currentVersion:
 				self.logger.info("Server is out of date: current: %s desired: %s" % (self.currentVersion,desiredVersion))
 				if self.serverProc != None:
 					self.stopServer()
@@ -99,4 +101,43 @@ class NS2Update:
 
 	def getCurrentSteamVersion(self):
 		self.logger.debug("Checking for server update...")
-		return 1
+		update = subprocess.Popen("%s +login %s %s +app_info_print %s +quit" % (self.get('steamcmd_binary'),self.get('steamcmd_user'),self.get('steamcmd_password'),self.get('steamcmd_appid_check')), stdout=subprocess.PIPE)
+
+		PARSER_IN_UNKNOWN = 0
+		PARSER_IN_APPINFO = 1
+		PARSER_IN_DEPOTINFO = 2
+
+		parserState = PARSER_IN_UNKNOWN
+		currentVersion = ""
+		for line in update.stdout:
+			self.logger.debug(line.strip())
+			if parserState == PARSER_IN_UNKNOWN:
+				if line.startswith("\"%s\"" % (self.get('steamcmd_appid_check'))):
+					parserState = PARSER_IN_APPINFO
+			elif parserState == PARSER_IN_APPINFO:
+				if line.strip().startswith("\"%s\"" % (self.get('steamcmd_depotid_check'))):
+					parserState = PARSER_IN_DEPOTINFO
+				elif line.startswith("}"):
+					break
+			elif parserState == PARSER_IN_DEPOTINFO:
+				# Something like this:
+				# "Public"                "7762996058298320329"
+				if line.strip().startswith("\"Public\""):
+					revLine = line[::-1].strip()
+					# becomes:
+					# "9230238928506992677"           "cilbuP"
+					tabPos = revLine.find("\t")
+					revVersion = revLine[1:tabPos-1]
+					# now:
+					# 9230238928506992677
+					currentVersion = revVersion[::-1]
+					# finally returning:
+					# 7762996058298320329
+					break
+
+		try:
+			update.kill()
+		except WindowsError:
+			pass
+
+		return currentVersion
